@@ -5,40 +5,41 @@
 *First approach: use the original 12 items;
 
 /*Import data*/
+proc import datafile="W:\\pu.data\Desktop\sas.stat.computer\data17195.csv"
+out=WORK.adp;run;
 proc print data=WORK.adp;run;
 
 /*PCA using all 12 items*/
+
+/*Step 1: we need to check how significant is the first component*/
 proc factor
 data=WORK.adp
-method=prin  /*specifies the method to be used in extracting components.*/
+method=prin  /*specifies the method to be used in extracting components.*/
 priors=one /*specify PRIORS=one to perform a principal component analysis*/
 mineigen=1 /*This statement will cause PROC FACTOR to retain and rotate any component whose eigenvalue is 1.00 or larger.*/
 plots=scree /*perform a scree test to visually determine how many components should be retained*/
 rotate=varimax /*varimax rotation provides orthogonal (uncorrelated) components.*/
 simple /*simple descriptive statistics*/
-flag=.40  /*flag (with an asterisk) factor loadings with absolute values greater than some specified size.*/ ;
+flag=.40  /*flag (with an asterisk) factor loadings with absolute values greater than some specified size.*/ ;
 var Q1 Q2 Q3 Q4 Q5 Q6 Q7 Q8 Q9 Q11 Q12;
-out=adp.out
 run;
+/*We want to see, in the results, that factor 1 has a significantly higher eigenvalue than other factors*/
 
-/*PCA using all 5 regrouped items*/
-data adp5;
-set WORK.adp;
-V1=(Q1+Q2+Q3)/3
-V2=(Q4+Q5+Q6)/3
-V3=(Q7+Q8)/2
-V4=(Q9+Q10)/2
-V5=(Q11+Q12)/2;
-run;
-
+/*Step 2: Calculate the optimal weights using PCA*/
 proc factor
-data=adp5;
-method=prin  /*specifies the method to be used in extracting components.*/
-priors=one /*specify PRIORS=one to perform a principal component analysis*/
-mineigen=1 /*This statement will cause PROC FACTOR to retain and rotate any component whose eigenvalue is 1.00 or larger.*/
-plots=scree /*perform a scree test to visually determine how many components should be retained*/
+data=WORK.adp
+nfact=1
+method=prin  /*specifies the method to be used in extracting components.*/
 rotate=varimax /*varimax rotation provides orthogonal (uncorrelated) components.*/
-simple /*simple descriptive statistics*/
-flag=.40  /*flag (with an asterisk) factor loadings with absolute values greater than some specified size.*/ ;
-var V1 V2 V3 V4 V5;
+priors=one
+score
+out=adpscore;
+var Q1 Q2 Q3 Q4 Q5 Q6 Q7 Q8 Q9 Q11 Q12;run;
+proc print data=adpscore;
 run;
+*The output data will automatically give you each observation's score for factor 1. You can use this score as a criteria;
+
+*The next step is to look at the distribution of the scores for factor 1 to help you decide how to categorize the respondents into different adoption stages;
+proc univariate data=adpscore;
+var Factor1;
+histogram Factor1;run;
