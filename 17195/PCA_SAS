@@ -6,8 +6,13 @@
 
 /*Import data*/
 proc import datafile="W:\\pu.data\Desktop\sas.stat.computer\data17195.csv"
-out=WORK.adp;run;
-proc print data=WORK.adp;run;
+out=WORK.adp1;run;
+proc print data=WORK.adp1;run;
+
+/*Before we get into the PCA analysis, we need to first fixed our reversed items*/
+data WORK.adp;
+set WORK.adp1;
+First_person=5-First_person;run;
 
 /*PCA using all 12 items*/
 
@@ -25,7 +30,7 @@ var Q1 Q2 Q3 Q4 Q5 Q6 Q7 Q8 Q9 Q11 Q12;
 run;
 /*We want to see, in the results, that factor 1 has a significantly higher eigenvalue than other factors*/
 
-/*Step 2: Calculate the optimal weights using PCA*/
+/*Step 2: Calculate the optimal weights using PCA by specifying factor number to be 1*/
 proc factor
 data=WORK.adp
 nfact=1
