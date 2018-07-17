@@ -1,0 +1,47 @@
+# Gnerate a fake dataset
+id<-1:300
+treat<-c(rep(1,100),rep(0,200))
+gender<-sample(c(0,1), 300, replace = TRUE)
+age<-sample(c(20,30,40),300,replace=TRUE)
+pre<-rnorm(300,mean=200,sd=10)
+post<-rnorm(300,mean=20,sd=1.5)
+y<-rnorm(300,mean=50,sd=5)
+data<-as.data.frame(cbind(id,treat,gender,age,pre,post,y))
+data$gender<-as.factor(data$gender)
+data$treat<-as.factor(data$treat)
+library(MatchIt)
+
+# optimal matching
+### optimal matching cannot perform exact matching at the same time
+### so we need to subset the dataset first
+
+### Let's suppose we want to gender of the respondents to be exactly the same
+### we need to first subset data into two groups: male and female.
+male<-data[data$gender==1,]
+female<-data[data$gender==0,]
+### if you have more than one factor that you need to match exactly, you need to subset your data into more groups
+### For instance, if you want exact matching on gender and race,
+### you need to create male.white, male.nonwhite, female.white and female.nonwhite.
+
+# Now we do optimal matching on each group seperately
+
+### Male group matching
+opt.mat1<-matchit(treat~age+pre+post,data=male,ratio=1,caliper=0.1,method="optimal")
+### there are some warnings produced during optimal matching, you can just ignore them.
+summary(opt.mat1)
+opt.data1<-as.data.frame(match.data(opt.mat1))
+trt1<-as.data.frame(opt.data1[opt.data1$treat==1,])
+trt1<-trt1[order(trt1$subclass),]
+cont1<-as.data.frame(opt.data1[opt.data1$treat==0,])
+cont1<-cont1[order(cont1$subclass),]
+t.test(trt1$y,cont1$y,paired=T)   
+
+### Female group matching
+opt.mat2<-matchit(treat~age+pre+post,data=female,ratio=1,caliper=0.1,method="optimal")
+summary(opt.mat2)
+opt.data2<-as.data.frame(match.data(opt.mat2))
+trt2<-as.data.frame(opt.data2[opt.data2$treat==1,])
+trt2<-trt2[order(trt2$subclass),]
+cont2<-as.data.frame(opt.data2[opt.data2$treat==0,])
+cont2<-cont2[order(cont2$subclass),]
+t.test(trt2$y,cont2$y,paired=T)  
